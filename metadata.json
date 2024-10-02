@@ -1,0 +1,22 @@
+{
+  "name": "Bosscoin",
+  "symbol": "BSS",
+  "description": "Bosscoin is a utility token built on the Solana blockchain.",
+  "image": "https://i.ibb.co/fp8DXSM/realbosscoin.jpg",
+  "external_url": "https://coincraft.uk.to",
+  "properties": {
+    "files": [
+      {
+        "uri": "https://i.ibb.co/fp8DXSM/realbosscoin.jpg",
+        "type": "image/png"
+      }
+    ],
+    "category": "image",
+    "creators": [
+      {
+        "address": "5wwCjk64unv1voKHrpzn9gtb8Yq5FvYNwLfRq7ubPgrA",
+        "share": 10000
+      }
+    ]
+  }
+}
