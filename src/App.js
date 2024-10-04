@@ -1,52 +1,55 @@
-import React, { useState, useMemo } from 'react';
-import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
-import { SolflareWalletAdapter } from '@solana/wallet-adapter-solflare';
-import { WalletModalProvider, WalletMultiButton } from '@solana/wallet-adapter-react-ui';
-import { clusterApiUrl } from '@solana/web3.js';
-import Task from './components/Task';
-import './App.css';
-
-// Default styles from Solana wallet adapter UI
-require('@solana/wallet-adapter-react-ui/styles.css');
+import React, { useState, useEffect } from "react";
+import WalletConnectProvider from "@walletconnect/ethereum-provider";
+import { ethers } from "ethers";
+import axios from "axios";
 
 function App() {
-    // State to toggle between Mainnet and Devnet
-    const [network, setNetwork] = useState('devnet');
+  const [connected, setConnected] = useState(false);
+  const [address, setAddress] = useState("");
+  const [wallets, setWallets] = useState([]);
 
-    // Dynamically switch the RPC network based on state
-    const endpoint = useMemo(() => {
-        return network === 'mainnet' ? 'https://api.mainnet-beta.solana.com' : clusterApiUrl('devnet');
-    }, [network]);
+  useEffect(() => {
+    // Fetch the connected wallets on component mount
+    axios.get("https://your-backend-url/api/wallets").then((response) => {
+      setWallets(response.data);
+    });
+  }, []);
 
-    // Solflare wallet configuration
-    const solflare = useMemo(() => new SolflareWalletAdapter({ network }), [network]);
+  const connectWallet = async () => {
+    const connector = new WalletConnectProvider({
+      infuraId: "YOUR_INFURA_ID", // Replace with your Infura project ID
+    });
 
-    const switchNetwork = () => {
-        setNetwork(prevNetwork => (prevNetwork === 'mainnet' ? 'devnet' : 'mainnet'));
-    };
+    await connector.enable();
+    const provider = new ethers.providers.Web3Provider(connector);
+    const signer = provider.getSigner();
+    const userAddress = await signer.getAddress();
 
-    return (
-        <ConnectionProvider endpoint={endpoint}>
-            <WalletProvider wallets={[solflare]}>
-                <WalletModalProvider>
-                    <div className="App">
-                        <h1>SPL Token Airdrop</h1>
-                        <p>Complete the task and claim your tokens!</p>
+    setConnected(true);
+    setAddress(userAddress);
 
-                        <Task />
+    // Store the connected wallet address in the backend
+    axios.post("https://your-backend-url/api/store-wallet", { walletAddress: userAddress });
+  };
 
-                        {/* Button to switch between Mainnet and Devnet */}
-                        <button onClick={switchNetwork}>
-                            Switch to {network === 'mainnet' ? 'Devnet' : 'Mainnet'}
-                        </button>
-
-                        {/* Wallet Connection */}
-                        <WalletMultiButton />
-                    </div>
-                </WalletModalProvider>
-            </WalletProvider>
-        </ConnectionProvider>
-    );
+  return (
+    <div>
+      <h1>DApp with WalletConnect</h1>
+      {!connected ? (
+        <button onClick={connectWallet}>Connect Wallet</button>
+      ) : (
+        <div>
+          <p>Connected as: {address}</p>
+          <h3>Connected Wallets</h3>
+          <ul>
+            {wallets.map((wallet) => (
+              <li key={wallet._id}>{wallet.address}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default App;
